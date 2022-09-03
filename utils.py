@@ -193,7 +193,6 @@ def check_total_dialogies(result):
 
 
 def start_parse(dialogs_manager, greetings, farewells, matcher, matcher_tokenizer, name_parser, company_parser, args):
-    # dialogs_by_id = {}
     parse_dialog_result = {}
     gkf, nk = args.gfk, args.nk
     ng_min, ng_max = args.ng_min, args.ng_max
@@ -236,7 +235,6 @@ def start_parse(dialogs_manager, greetings, farewells, matcher, matcher_tokenize
             parse_dialog_result[dlg_id]['replica_with_company'].append(None)
             parse_dialog_result[dlg_id]['name_company'].append(None)
 
-        # dialogs_by_id[dlg_id] = replics
     parse_dialog_result = check_total_dialogies(parse_dialog_result)
     return parse_dialog_result
 
