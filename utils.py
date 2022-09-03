@@ -10,11 +10,31 @@ from models import get_matcher, get_yargy_name_parser, get_yargy_company_parser
 pd.options.mode.chained_assignment = None
 
 
+def load_files(args):
+    greetings = get_greetings_vocab()
+    farewells = get_farewells_vocab()
+    dialogs = pd.read_csv(args.input_file, delimiter=args.delimiter)
+    dialogs_manager = dialogs[dialogs['role'] == 'manager']
+
+    return greetings, farewells, dialogs_manager
+
+
+def load_models():
+    matcher, matcher_tokenizer = get_matcher()
+    name_parser = get_yargy_name_parser()
+    company_parser = get_yargy_company_parser()
+
+    return matcher, matcher_tokenizer, name_parser, company_parser
+
+
 def get_argparse():
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('-i', '--input_file', dest='input_file',
                         type=str, default='test_data.csv', nargs='?',
                         help='Name of file with dialogs from parse process. Need format CSV. Default: test_date.csv')
+    parser.add_argument('-d', '--delimiter', dest='delimiter',
+                        type=str, default=',', nargs='?',
+                        help='Delimiter for read csv file. Default: ,')
     parser.add_argument('-o', '--output_file', dest='output_file',
                         type=str, default=None, nargs='?',
                         help='Name of output file with results of parse if you want. '
@@ -47,10 +67,6 @@ def get_farewells_vocab(path_farewells='farewells.txt'):
         farewells = {
             'farewell': list(set([' '.join(re.findall(r'\w+-*\w*', w.strip().lower())) for w in f.readlines()]))}
     return farewells
-
-
-def simple_softmax(x):
-    return np.exp(x)/sum(np.exp(x))
 
 
 def get_ngramm(text, min_n=1, max_n=3):
@@ -176,53 +192,6 @@ def check_total_dialogies(result):
     return result
 
 
-def show_result_parse(result_parse, f=sys.stdout):
-    for idx_dialog, res_dialog in result_parse.items():
-        print(f'Диалог № {idx_dialog}.', file=f)
-        if res_dialog['check_total_dialogue']['greeting'] == 'yes':
-            print(f'Менеджер поздоровался тут: \"{res_dialog["greeting"][1]}\"', file=f)
-        else:
-            print(f'Менеджер не поздоровался.', file=f)
-
-        if res_dialog['check_total_dialogue']['name_manager'] == 'yes':
-            print(f'Менеджер представился тут: \"{res_dialog["replica_with_name"][0]}\"', file=f)
-            print(f'Менеджера зовут: \"{res_dialog["name_manager"][0]}\"', file=f)
-        else:
-            print('Менеджер не представился.', file=f)
-
-        if res_dialog['check_total_dialogue']['name_company'] == 'yes':
-            print(f'Менеджер из компании: \"{res_dialog["name_company"][0]}\"', file=f)
-        else:
-            print(f'Менеджер не назвал компанию.', file=f)
-
-        if res_dialog['check_total_dialogue']['farewell'] == 'yes':
-            print(f'Менеджер попрощался тут: \"{res_dialog["farewell"][1]}\"', file=f)
-        else:
-            print(f'Менеджер не попрощался.', file=f)
-
-        if res_dialog['check_total_dialogue']['farewell'] == 'yes' and res_dialog['check_total_dialogue']['greeting'] == 'yes':
-            print(f'Менеджер поздоровался и попрощался.', file=f)
-        else:
-            print(f'Менеджер не поздоровался и/или не попрощался.', file=f)
-
-
-def load_files(args):
-    greetings = get_greetings_vocab()
-    farewells = get_farewells_vocab()
-    dialogs = pd.read_csv(args.input_file)
-    dialogs_manager = dialogs[dialogs['role'] == 'manager']
-
-    return greetings, farewells, dialogs_manager
-
-
-def load_models():
-    matcher, matcher_tokenizer = get_matcher()
-    name_parser = get_yargy_name_parser()
-    company_parser = get_yargy_company_parser()
-
-    return matcher, matcher_tokenizer, name_parser, company_parser
-
-
 def start_parse(dialogs_manager, greetings, farewells, matcher, matcher_tokenizer, name_parser, company_parser, args):
     # dialogs_by_id = {}
     parse_dialog_result = {}
@@ -270,6 +239,36 @@ def start_parse(dialogs_manager, greetings, farewells, matcher, matcher_tokenize
         # dialogs_by_id[dlg_id] = replics
     parse_dialog_result = check_total_dialogies(parse_dialog_result)
     return parse_dialog_result
+
+
+def show_result_parse(result_parse, f=sys.stdout):
+    for idx_dialog, res_dialog in result_parse.items():
+        print(f'Диалог № {idx_dialog}.', file=f)
+        if res_dialog['check_total_dialogue']['greeting'] == 'yes':
+            print(f'Менеджер поздоровался тут: \"{res_dialog["greeting"][1]}\"', file=f)
+        else:
+            print(f'Менеджер не поздоровался.', file=f)
+
+        if res_dialog['check_total_dialogue']['name_manager'] == 'yes':
+            print(f'Менеджер представился тут: \"{res_dialog["replica_with_name"][0]}\"', file=f)
+            print(f'Менеджера зовут: \"{res_dialog["name_manager"][0]}\"', file=f)
+        else:
+            print('Менеджер не представился.', file=f)
+
+        if res_dialog['check_total_dialogue']['name_company'] == 'yes':
+            print(f'Менеджер из компании: \"{res_dialog["name_company"][0]}\"', file=f)
+        else:
+            print(f'Менеджер не назвал компанию.', file=f)
+
+        if res_dialog['check_total_dialogue']['farewell'] == 'yes':
+            print(f'Менеджер попрощался тут: \"{res_dialog["farewell"][1]}\"', file=f)
+        else:
+            print(f'Менеджер не попрощался.', file=f)
+
+        if res_dialog['check_total_dialogue']['farewell'] == 'yes' and res_dialog['check_total_dialogue']['greeting'] == 'yes':
+            print(f'Менеджер поздоровался и попрощался.', file=f)
+        else:
+            print(f'Менеджер не поздоровался и/или не попрощался.', file=f)
 
 
 if __name__ == "__main__":
