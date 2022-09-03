@@ -1,7 +1,5 @@
 # bewise-test-jun
  
-## Bewise Test ##
-
 #### Запуск скрипта ####
     python parse_dialogs.py
  
